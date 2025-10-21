@@ -1,0 +1,15 @@
+# Core dependencies
+numpy>=1.22
+pyyaml>=6.0
+matplotlib>=3.6
+safetensors>=0.4.2
+accelerate>=0.28.0
+transformers>=4.45.0
+vector-quantize-pytorch>=1.14.24
+# Install torch separately for your CUDA version if needed; default CPU/GPU wheels also work on some setups
+# See https://pytorch.org/get-started/locally/
+torch>=2.1.0
+
+# Optional (not required to run tokenizer demo)
+# deepspeed>=0.14.0        # if using deepspeed training
+# flash-attn>=2.5.6        # optional; Linux-only; ignored if not available
