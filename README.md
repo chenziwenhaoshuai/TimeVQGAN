@@ -1,89 +1,63 @@
-# TimeVQGAN
+# TimeVQGAN: Universal Time-series Vector Quantized Generative Adversarial Networks
 
-TimeVQGAN is a minimal, self-contained implementation of a Vector-Quantized GAN for time series built on top of a TimeMoE encoder/decoder stack. It provides:
+Official implementation of "TimeVQGAN: Universal Time-series Vector Quantized Generative Adversarial Networks" (ICDE 2026).
 
-- An encoder that downsamples and embeds 1D signals with a pretrained TimeMoE model
-- A vector-quantized codebook for discrete tokenization of time series
-- A transformer-based decoder to reconstruct signals from code indices
-- A simple perceptual loss module for training (LPIPS-style over hidden states)
+TimeVQGAN converts continuous time series into discrete token sequences via vector quantization and adversarial training, enabling seamless integration with large language models and other token-based architectures.
 
+## Features
 
-## Repository structure
+- **Universal Tokenization**: Converts arbitrary time series into discrete tokens (block size 4)
+- **Large-Scale Pretraining**: Pretrained on Time-300B dataset with 16,384 codebook size
+- **State-of-the-Art Performance**: Achieves SOTA results across 8 tasks including forecasting, classification, anomaly detection, and generation
 
-- `TimeVQGAN.py` — Core model components: encoder (TimeMoE-based), codebook, decoder, LPIPS module, and the TimeVQGAN forward/encode/decode methods
-- `TimeVQGAN_tokenizer.py` — A small wrapper exposing an encode/decode API for time series and a demo that visualizes reconstruction
-- `checkpoints/TimeVQGAN.pt` — Pretrained VQ-GAN checkpoint (used by `TimeVQGAN_tokenizer.py`)
-- `TimeMoE_50M/` — A local Hugging Face-style folder with config and `model.safetensors` weights for the TimeMoE backbone used by the encoder
-- `time_moe/` — Minimal TimeMoE implementation and training utilities
+## Installation
 
-
-## Requirements
-
-- Python 3.9+ (tested with 3.9)
-- NVIDIA GPU + CUDA required to run the provided code as-is
-  - The encoder and parts of the pipeline call `.cuda()` directly; CPU-only usage would require minor code changes
-
-Install Python dependencies via `requirements.txt` (see below for notes on PyTorch and optional extras):
-
-```
+```bash
 pip install -r requirements.txt
 ```
 
-Notes:
-- Install PyTorch matching your CUDA version from https://pytorch.org/get-started/locally/ if the default pip wheel doesn’t match your system.
-- FlashAttention is optional and Linux-only; the code safely falls back when it’s unavailable.
-- Deepspeed is optional and only needed if you enable it in training arguments.
+**Requirements:**
+- Python 3.9+
+- NVIDIA GPU with CUDA
+- PyTorch 2.0+
 
+**Download pretrained models:**
+- TimeVQGAN checkpoint: [Baidu Netdisk](https://pan.baidu.com/s/1sS5JTyOp82YJL04CRmM50w?pwd=sj1w) → `checkpoints/TimeVQGAN.pt`
+- TimeMoE backbone: [HuggingFace](https://huggingface.co/Maple728/TimeMoE-50M) → `TimeMoE_50M/`
 
-## Quickstart: tokenize and reconstruct a time series
+## Quick Start
 
-The simplest way to try the tokenizer is to run the demo in `TimeVQGAN_tokenizer.py` which:
-- Builds the tokenizer on GPU
-- Encodes a synthetic 1D signal into discrete code indices
-- Decodes it back to a reconstructed signal
-- Plots the original and reconstruction
-
-Windows (cmd.exe):
-
-```
+Run the demo:
+```bash
 python TimeVQGAN_tokenizer.py
 ```
 
-You should see the printed code indices and a Matplotlib window with two subplots (original vs reconstruction).
-
-## Programmatic usage
-
-Example: turn an arbitrary 1D float tensor into code indices and back.
-
+Programmatic usage:
 ```python
 import torch
 from TimeVQGAN_tokenizer import TimeVQGAN_Tokenizer
 
-# 1) Prepare a 1D float tensor on GPU (length is arbitrary)
-#    The tokenizer will chunk/pad internally to 512-length blocks.
-series = torch.sin(torch.linspace(0, 200, 4096)).cuda()
+# Initialize tokenizer
+tokenizer = TimeVQGAN_Tokenizer().cuda()
 
-# 2) Build tokenizer (loads TimeVQGAN and pretrained weights)
-model = TimeVQGAN_Tokenizer().cuda()
+# Encode time series to discrete codes
+time_series = torch.randn(2048).cuda()
+codes = tokenizer.encode(time_series)
 
-# 3) Encode -> 1D long tensor of code indices
-codes = model.encode(series)
+# Decode back to continuous signal
+reconstructed = tokenizer.decode(codes)
+```
 
-# 4) Decode -> reconstructed 1D float tensor
-recon = model.decode(codes)
+## Repository Structure
+
+```
+├── TimeVQGAN.py              # Core model components
+├── TimeVQGAN_tokenizer.py    # Tokenizer API and demo
+├── checkpoints/              # Pretrained weights (download required)
+├── TimeMoE_50M/             # TimeMoE backbone (download required)
+└── time_moe/                # TimeMoE utilities
 ```
 
 
-## Training and datasets
 
-The training script will be open-sourced later.
-
-## License
-
-No license file was found in this repository. If you plan to redistribute or publish results, please add an appropriate license file and ensure you have the rights to the included weights and datasets.
-
-
-## Citation
-
-If you use this codebase in your research, please consider citing relevant VQ-GAN and MoE/Time-series transformer works. Add your own bib entries here.
-
+**Note:** Full training scripts and MoVE implementation will be released soon.
